@@ -1,2 +1,2 @@
 Canteen-o-Matic!
-Canteen Management system.
+(Canteen Management system)
