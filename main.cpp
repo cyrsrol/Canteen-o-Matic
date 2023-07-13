@@ -1,6 +1,8 @@
 //July 10, 2023. Finished on making the initial code, currently planning and polishing the main features.
 //July 12, 2023. Improved the queue by adding the 'removing customers from waitlist' and 'viewing the waitlist' features.
-//July 13, 2023. Added the 'view visitor history' feature which shows the previous customers that visited.
+//July 13, 2023. Added and improved the seating feature.
+
+// Will add the visitor history feature.
 
 #include <iostream>
 #include <queue>
@@ -11,7 +13,7 @@ struct MenuItem {
     double price;
     MenuItem* next;
 
-    MenuItem(string n, double p) {
+    MenuItem(string n = "", double p = 0.0) {
         name = n;
         price = p;
         next = nullptr;
@@ -25,6 +27,10 @@ private:
 public:
     Menu() {
         head = nullptr;
+        // Adding default menu items
+        addFood("Burger", 4.99);
+        addFood("Pizza", 7.99);
+        addFood("Salad", 5.99);
     }
 
     void addFood(string name, double price) {
@@ -39,6 +45,36 @@ public:
             }
             temp->next = newItem;
         }
+    }
+
+    void removeFood(string name) {
+        if (head == nullptr) {
+            cout << "Menu is empty." << endl;
+            return;
+        }
+
+        MenuItem* temp = head;
+        MenuItem* prev = nullptr;
+
+        while (temp != nullptr) {
+            if (temp->name == name) {
+                if (prev == nullptr) {
+                    // Removing the first node
+                    head = temp->next;
+                } else {
+                    prev->next = temp->next;
+                }
+
+                delete temp;
+                cout << "Food item removed: " << name << endl;
+                return;
+            }
+
+            prev = temp;
+            temp = temp->next;
+        }
+
+        cout << "Food item not found." << endl;
     }
 
     void displayMenu() {
@@ -72,11 +108,33 @@ class SeatList {
 private:
     Seat* head;
     int availableSeats;
+    int maxSeats;
 
 public:
     SeatList() {
         head = nullptr;
         availableSeats = 0;
+        maxSeats = 0;
+        setMaxSeats(50); // Setting default maximum seats to 50
+    }
+
+    void setMaxSeats(int max) {
+        maxSeats = max;
+
+        if (head != nullptr) {
+            // Clear existing seats
+            Seat* temp = head;
+            while (temp != nullptr) {
+                Seat* nextSeat = temp->next;
+                delete temp;
+                temp = nextSeat;
+            }
+            head = nullptr;
+        }
+
+        for (int i = 1; i <= maxSeats; i++) {
+            addSeat(i);
+        }
     }
 
     void addSeat(int seatNumber) {
@@ -96,42 +154,38 @@ public:
     }
 
     void displayAvailableSeats() {
-        Seat* temp = head;
-        bool hasAvailableSeats = false;
-
-        cout << "Available seats: ";
-        while (temp != nullptr) {
-            if (!temp->isOccupied) {
-                cout << temp->seatNumber << " ";
-                hasAvailableSeats = true;
-            }
-            temp = temp->next;
-        }
-
-        if (!hasAvailableSeats) {
-            cout << "No available seats." << endl;
-        } else {
-            cout << endl;
-        }
+        cout << "Available seats: " << availableSeats << endl;
     }
 
     int getAvailableSeatCount() {
         return availableSeats;
     }
 
-    bool occupySeat(int seatNumber) {
+    bool occupySeats(int numSeats) {
+        if (numSeats <= 0 || numSeats > availableSeats) {
+            cout << "Invalid number of seats to occupy." << endl;
+            return false;
+        }
+
+        int occupiedCount = 0;
         Seat* temp = head;
 
-        while (temp != nullptr) {
-            if (temp->seatNumber == seatNumber && !temp->isOccupied) {
+        while (temp != nullptr && occupiedCount < numSeats) {
+            if (!temp->isOccupied) {
                 temp->isOccupied = true;
+                occupiedCount++;
                 availableSeats--;
-                return true;
             }
             temp = temp->next;
         }
 
-        return false;
+        if (occupiedCount == numSeats) {
+            cout << "Successfully occupied " << occupiedCount << " seat(s)." << endl;
+            return true;
+        } else {
+            cout << "Insufficient available seats." << endl;
+            return false;
+        }
     }
 };
 
@@ -140,16 +194,24 @@ private:
     Menu menu;
     SeatList seatList;
     queue<string> waitingList;
-    queue<string> visitedHistory;
+    bool isAdmin;
 
 public:
     Canteen() {
-        seatList.addSeat(50);
+        isAdmin = false;
+    }
+
+    void setMaxSeats(int max) {
+        seatList.setMaxSeats(max);
     }
 
     void addFood(string name, double price) {
         menu.addFood(name, price);
         cout << "Food item added: " << name << " - $" << price << endl;
+    }
+
+    void removeFood(string name) {
+        menu.removeFood(name);
     }
 
     void displayMenu() {
@@ -160,130 +222,115 @@ public:
         waitingList.push(customerName);
         cout << customerName << " has been added to the waiting list." << endl;
     }
-
     void removeCustomerFromWaitingList() {
-    if (!waitingList.empty()) {
-        cout << "Waiting list:" << endl;
+    if (waitingList.empty()) {
+        cout << "Waiting list is empty." << endl;
+    } else {
         displayWaitingList();
 
-        string customerName;
         cout << "Enter the name of the customer to remove: ";
+        string customerName;
         cin.ignore();
         getline(cin, customerName);
 
-        bool customerFound = false;
-        queue<string> tempWaitingList;
+        bool found = false;
+        queue<string> temp;
 
         while (!waitingList.empty()) {
-            string customer = waitingList.front();
+            string frontCustomer = waitingList.front();
             waitingList.pop();
 
-            if (customer != customerName) {
-                tempWaitingList.push(customer);
+            if (frontCustomer == customerName) {
+                found = true;
+                cout << "Removed customer: " << frontCustomer << " from the waiting list." << endl;
+                break;
             } else {
-                customerFound = true;
+                temp.push(frontCustomer);
             }
         }
 
-        waitingList = tempWaitingList;
-
-        if (customerFound) {
-            cout << customerName << " is removed from the waiting list." << endl;
-            visitedHistory.push(customerName);
-        } else {
-            cout << "Customer not found in the waiting list. No customer removed." << endl;
+        while (!temp.empty()) {
+            waitingList.push(temp.front());
+            temp.pop();
         }
-    } else {
-        cout << "Waiting list is empty." << endl;
+
+        if (!found) {
+            cout << "Customer not found in the waiting list." << endl;
+        }
     }
 }
 
     void displayWaitingList() {
-        if (!waitingList.empty()) {
-            queue<string> tempWaitingList = waitingList;
+        if (waitingList.empty()) {
+            cout << "Waiting list is empty." << endl;
+        } else {
+            cout << "Waiting list:" << endl;
             int count = 1;
-            while (!tempWaitingList.empty()) {
-                cout << count << ". " << tempWaitingList.front() << endl;
-                tempWaitingList.pop();
+            queue<string> temp = waitingList;
+            while (!temp.empty()) {
+                cout << count << ". " << temp.front() << endl;
+                temp.pop();
                 count++;
             }
-        } else {
-            cout << "Waiting list is empty." << endl;
         }
     }
 
-    void displayVisitedHistory() {
-        if (!visitedHistory.empty()) {
-            cout << "Visited history:" << endl;
-            queue<string> tempVisitedHistory = visitedHistory;
-            int count = 1;
-            while (!tempVisitedHistory.empty()) {
-                cout << count << ". " << tempVisitedHistory.front() << endl;
-                tempVisitedHistory.pop();
-                count++;
-            }
+    void occupySeats() {
+        int numSeats;
+        cout << "Enter the number of seats to occupy: ";
+        cin >> numSeats;
+
+        seatList.occupySeats(numSeats);
+    }
+
+    bool isAdminUser() {
+        return isAdmin;
+    }
+
+    void loginAdmin() {
+        string adminPassword;
+        cout << "Enter admin password: ";
+        cin.ignore();
+        getline(cin, adminPassword);
+
+        // Add password verification logic here
+        if (adminPassword == "admin") {
+            isAdmin = true;
+            cout << "Logged in as admin." << endl;
         } else {
-            cout << "Visited history is empty." << endl;
+            cout << "Incorrect password. Login failed." << endl;
         }
     }
 
-    void serveNextCustomer() {
-        if (!waitingList.empty()) {
-            string customerName = waitingList.front();
-            waitingList.pop();
-            visitedHistory.push(customerName);
-            cout << "Next customer: " << customerName << endl;
-        } else {
-            cout << "Waiting list is empty." << endl;
-        }
+    void logoutAdmin() {
+        isAdmin = false;
+        cout << "Logged out from admin." << endl;
     }
 
     void displayAvailableSeats() {
         seatList.displayAvailableSeats();
     }
-
-    int getAvailableSeatCount() {
-        return seatList.getAvailableSeatCount();
-    }
-
-    bool occupySeat(int seatNumber) {
-        if (seatList.occupySeat(seatNumber)) {
-            cout << "Seat " << seatNumber << " has been occupied." << endl;
-            return true;
-        } else {
-            cout << "Seat " << seatNumber << " is already occupied or does not exist." << endl;
-            return false;
-        }
-    }
 };
 
 int main() {
     Canteen canteen;
-
     int choice;
-    string foodName, customerName;
-    double foodPrice;
-    int seatNumber;
-
-    bool isAdmin = false;
 
     while (true) {
         cout << "----------- Canteen Management System -----------" << endl;
         canteen.displayMenu();
         canteen.displayAvailableSeats();
-        cout << "1. Add Customer to Waiting List" << endl;
+        cout << "1. Add Customer" << endl;
         cout << "2. Remove Customer from Waiting List" << endl;
-        cout << "3. View Waiting List" << endl;
-        cout << "4. View Visited History" << endl;
-        cout << "5. Serve Next Customer" << endl;
-        cout << "6. Occupy Seat" << endl;
+        cout << "3. Display Waiting List" << endl;
+        cout << "4. Occupy Seats" << endl;
 
-        if (isAdmin) {
-            cout << "7. Add Food" << endl;
-            cout << "8. Logout" << endl;
+        if (canteen.isAdminUser()) {
+            cout << "5. Add Food" << endl;
+            cout << "6. Logout from Admin" << endl;
         } else {
-            cout << "7. Login as Admin" << endl;
-            cout << "8. Exit" << endl;
+            cout << "5. Login as Admin" << endl;
+            cout << "6. Exit" << endl;
         }
 
         cout << "------------------------------------------------" << endl;
@@ -291,12 +338,14 @@ int main() {
         cin >> choice;
 
         switch (choice) {
-            case 1:
+            case 1: {
+                string customerName;
                 cout << "Enter customer name: ";
                 cin.ignore();
                 getline(cin, customerName);
                 canteen.addCustomerToWaitingList(customerName);
                 break;
+            }
             case 2:
                 canteen.removeCustomerFromWaitingList();
                 break;
@@ -304,66 +353,32 @@ int main() {
                 canteen.displayWaitingList();
                 break;
             case 4:
-                canteen.displayVisitedHistory();
+                canteen.occupySeats();
                 break;
             case 5:
-                canteen.serveNextCustomer();
-                break;
-            case 6:
-                cout << "Enter seat number: ";
-                cin >> seatNumber;
-                canteen.occupySeat(seatNumber);
-                break;
-            case 7:
-                if (isAdmin) {
-                    isAdmin = false;
-                } else {
-                    string adminPassword;
-                    cout << "Enter admin password: ";
-                    cin.ignore();
-                    getline(cin, adminPassword);
-
-                    // Add password verification logic here
-                    if (adminPassword == "pass") {
-                        isAdmin = true;
-                    } else {
-                        cout << "Incorrect password. Login failed." << endl;
-                    }
-                }
-                break;
-            case 8:
-                cout << "Exiting the program..." << endl;
-                return 0;
-            default:
-                cout << "Invalid choice. Please try again." << endl;
-        }
-
-        if (isAdmin && choice == 7) {
-            cout << "You are logged in as admin." << endl;
-            cout << endl;
-            canteen.displayMenu();
-            cout << "----------- Admin Options -----------" << endl;
-            cout << "1. Add Food" << endl;
-            cout << "2. Logout" << endl;
-            cout << "-------------------------------------" << endl;
-            cout << "Enter your choice: ";
-            cin >> choice;
-
-            switch (choice) {
-                case 1:
+                if (canteen.isAdminUser()) {
+                    string foodName;
+                    double foodPrice;
                     cout << "Enter food name: ";
                     cin.ignore();
                     getline(cin, foodName);
-                    cout << "Enter food price: ";
+                    cout << "Enter food price: $";
                     cin >> foodPrice;
                     canteen.addFood(foodName, foodPrice);
-                    break;
-                case 2:
-                    isAdmin = false;
-                    break;
-                default:
-                    cout << "Invalid choice. Please try again." << endl;
-            }
+                } else {
+                    canteen.loginAdmin();
+                }
+                break;
+            case 6:
+                if (canteen.isAdminUser()) {
+                    canteen.logoutAdmin();
+                } else {
+                    cout << "Exiting the program..." << endl;
+                    return 0;
+                }
+                break;
+            default:
+                cout << "Invalid choice. Please try again." << endl;
         }
 
         cout << endl;
