@@ -3,8 +3,8 @@
 //July 13, 2023. Added and improved the seating feature.
 //July 14, 2023. Added a Food Menu and Waiting List per Stall.
 
-// will improve the UI
-// will add the visitor history feature.
+// Will improve the UI
+// Will add the visitor history feature.
 
 #include <iostream>
 #include <queue>
@@ -28,7 +28,6 @@ private:
 
 public:
     Menu() {
-        // Adding default menu items
         addFood("Burger", 4.99, "Stall A");
         addFood("Pizza", 7.99, "Stall B");
         addFood("Salad", 5.99, "Stall A");
@@ -91,14 +90,13 @@ public:
         head = nullptr;
         availableSeats = 0;
         maxSeats = 0;
-        setMaxSeats(50); // Setting default maximum seats to 50
+        setMaxSeats(50);
     }
 
     void setMaxSeats(int max) {
         maxSeats = max;
 
         if (head != nullptr) {
-            // Clear existing seats
             Seat* temp = head;
             while (temp != nullptr) {
                 Seat* nextSeat = temp->next;
@@ -256,10 +254,11 @@ int main() {
         cout << "3. Display Waiting List" << endl;
 
         if (isAdmin) {
-            cout << "4. Add Food to Stall" << endl;
-            cout << "5. Remove Food from Stall" << endl;
-            cout << "6. Set Maximum Seats" << endl;
-            cout << "7. Logout" << endl;
+            cout << "4. Serve Next Customer" << endl;
+            cout << "5. Add Food to Stall" << endl;
+            cout << "6. Remove Food from Stall" << endl;
+            cout << "7. Set Maximum Seats" << endl;
+            cout << "8. Logout" << endl;
         } else {
             cout << "4. Login as Admin" << endl;
             cout << "5. Exit" << endl;
@@ -284,26 +283,15 @@ int main() {
             case 3:
                 canteen.displayWaitingList();
                 break;
-            case 4: {
+            case 4:
                 if (isAdmin) {
-                    string foodName, stallName;
-                    double foodPrice;
-                    cout << "Enter food name: ";
-                    cin.ignore();
-                    getline(cin, foodName);
-                    cout << "Enter food price: $";
-                    cin >> foodPrice;
-                    cout << "Enter stall name: ";
-                    cin.ignore();
-                    getline(cin, stallName);
-                    canteen.addFoodToStall(foodName, foodPrice, stallName);
+                    canteen.serveNextCustomer();
                 } else {
                     string adminPassword;
                     cout << "Enter admin password: ";
                     cin.ignore();
                     getline(cin, adminPassword);
 
-                    // Add password verification logic here
                     if (adminPassword == "pass") {
                         isAdmin = true;
                         cout << "Logged in as admin." << endl;
@@ -312,7 +300,6 @@ int main() {
                     }
                 }
                 break;
-            }
             case 5:
                 if (isAdmin) {
                     canteen.displayMenuPerStall();
@@ -330,6 +317,23 @@ int main() {
                 break;
             case 6:
                 if (isAdmin) {
+                    string foodName, stallName;
+                    double foodPrice;
+                    cout << "Enter food name: ";
+                    cin.ignore();
+                    getline(cin, foodName);
+                    cout << "Enter food price: $";
+                    cin >> foodPrice;
+                    cout << "Enter stall name: ";
+                    cin.ignore();
+                    getline(cin, stallName);
+                    canteen.addFoodToStall(foodName, foodPrice, stallName);
+                } else {
+                    cout << "Invalid choice. Please try again." << endl;
+                }
+                break;
+            case 7:
+                if (isAdmin) {
                     int maxSeats;
                     cout << "Enter the maximum number of seats: ";
                     cin >> maxSeats;
@@ -339,7 +343,7 @@ int main() {
                     cout << "Invalid choice. Please try again." << endl;
                 }
                 break;
-            case 7:
+            case 8:
                 if (isAdmin) {
                     isAdmin = false;
                     cout << "Logged out." << endl;
@@ -356,4 +360,3 @@ int main() {
 
     return 0;
 }
-
