@@ -1,8 +1,10 @@
 //July 10, 2023. Finished on making the initial code, currently planning and polishing the main features.
 //July 12, 2023. Improved the queue by adding the 'removing customers from waitlist' and 'viewing the waitlist' features.
 //July 13, 2023. Added and improved the seating feature.
+//July 14, 2023. Added a Food Menu and Waiting List per Stall.
 
-// Will add the visitor history feature.
+// will improve the UI
+// will add the visitor history feature.
 
 #include <iostream>
 #include <queue>
