@@ -6,87 +6,61 @@
 
 #include <iostream>
 #include <queue>
+#include <map>
+#include <algorithm>
 using namespace std;
 
 struct MenuItem {
     string name;
     double price;
-    MenuItem* next;
 
     MenuItem(string n = "", double p = 0.0) {
         name = n;
         price = p;
-        next = nullptr;
     }
 };
 
 class Menu {
 private:
-    MenuItem* head;
+    map<string, vector<MenuItem>> menuItems;
 
 public:
     Menu() {
-        head = nullptr;
         // Adding default menu items
-        addFood("Burger", 4.99);
-        addFood("Pizza", 7.99);
-        addFood("Salad", 5.99);
+        addFood("Burger", 4.99, "Stall A");
+        addFood("Pizza", 7.99, "Stall B");
+        addFood("Salad", 5.99, "Stall A");
     }
 
-    void addFood(string name, double price) {
-        MenuItem* newItem = new MenuItem(name, price);
+    void addFood(string name, double price, string stall) {
+        menuItems[stall].push_back(MenuItem(name, price));
+    }
 
-        if (head == nullptr) {
-            head = newItem;
+    void removeFood(string name, string stall) {
+        auto it = menuItems.find(stall);
+        if (it != menuItems.end()) {
+            vector<MenuItem>& items = it->second;
+            items.erase(remove_if(items.begin(), items.end(), [&](const MenuItem& item) {
+                return item.name == name;
+            }), items.end());
+            cout << "Food item removed: " << name << endl;
         } else {
-            MenuItem* temp = head;
-            while (temp->next != nullptr) {
-                temp = temp->next;
-            }
-            temp->next = newItem;
+            cout << "Stall not found." << endl;
         }
     }
 
-    void removeFood(string name) {
-        if (head == nullptr) {
+    void displayMenuPerStall() {
+        if (menuItems.empty()) {
             cout << "Menu is empty." << endl;
-            return;
-        }
-
-        MenuItem* temp = head;
-        MenuItem* prev = nullptr;
-
-        while (temp != nullptr) {
-            if (temp->name == name) {
-                if (prev == nullptr) {
-                    // Removing the first node
-                    head = temp->next;
-                } else {
-                    prev->next = temp->next;
+        } else {
+            cout << "Food Menu per Stall:" << endl;
+            for (const auto& stall : menuItems) {
+                cout << "Stall: " << stall.first << endl;
+                const vector<MenuItem>& items = stall.second;
+                for (const auto& item : items) {
+                    cout << item.name << " - $" << item.price << endl;
                 }
-
-                delete temp;
-                cout << "Food item removed: " << name << endl;
-                return;
-            }
-
-            prev = temp;
-            temp = temp->next;
-        }
-
-        cout << "Food item not found." << endl;
-    }
-
-    void displayMenu() {
-        MenuItem* temp = head;
-
-        if (temp == nullptr) {
-            cout << "Menu is empty." << endl;
-        } else {
-            cout << "Food Menu:" << endl;
-            while (temp != nullptr) {
-                cout << temp->name << " - $" << temp->price << endl;
-                temp = temp->next;
+                cout << endl;
             }
         }
     }
@@ -194,71 +168,61 @@ private:
     Menu menu;
     SeatList seatList;
     queue<string> waitingList;
-    bool isAdmin;
+    vector<string> stalls;
 
 public:
-    Canteen() {
-        isAdmin = false;
-    }
+    Canteen() {}
 
     void setMaxSeats(int max) {
         seatList.setMaxSeats(max);
     }
 
-    void addFood(string name, double price) {
-        menu.addFood(name, price);
-        cout << "Food item added: " << name << " - $" << price << endl;
+    void addStall(string stallName) {
+        stalls.push_back(stallName);
     }
 
-    void removeFood(string name) {
-        menu.removeFood(name);
+    void addFoodToStall(string name, double price, string stallName) {
+        menu.addFood(name, price, stallName);
+        cout << "Food item added: " << name << " - $" << price << " (Stall: " << stallName << ")" << endl;
     }
 
-    void displayMenu() {
-        menu.displayMenu();
+    void removeFoodFromStall(string name, string stallName) {
+        menu.removeFood(name, stallName);
+    }
+
+    void displayMenuPerStall() {
+        menu.displayMenuPerStall();
     }
 
     void addCustomerToWaitingList(string customerName) {
         waitingList.push(customerName);
         cout << customerName << " has been added to the waiting list." << endl;
     }
-    void removeCustomerFromWaitingList() {
-    if (waitingList.empty()) {
-        cout << "Waiting list is empty." << endl;
-    } else {
-        displayWaitingList();
 
-        cout << "Enter the name of the customer to remove: ";
-        string customerName;
-        cin.ignore();
-        getline(cin, customerName);
-
-        bool found = false;
-        queue<string> temp;
-
-        while (!waitingList.empty()) {
-            string frontCustomer = waitingList.front();
+    void serveNextCustomer() {
+        if (!waitingList.empty()) {
+            cout << "Next customer: " << waitingList.front() << endl;
             waitingList.pop();
-
-            if (frontCustomer == customerName) {
-                found = true;
-                cout << "Removed customer: " << frontCustomer << " from the waiting list." << endl;
-                break;
-            } else {
-                temp.push(frontCustomer);
-            }
-        }
-
-        while (!temp.empty()) {
-            waitingList.push(temp.front());
-            temp.pop();
-        }
-
-        if (!found) {
-            cout << "Customer not found in the waiting list." << endl;
+        } else {
+            cout << "Waiting list is empty." << endl;
         }
     }
-}
+
+    void displayAvailableSeats() {
+        seatList.displayAvailableSeats();
+    }
+
+    int getAvailableSeatCount() {
+        return seatList.getAvailableSeatCount();
+    }
+
+    void occupySeats() {
+        int numSeats;
+        cout << "Enter the number of seats to occupy: ";
+        cin >> numSeats;
+
+        seatList.occupySeats(numSeats);
+    }
 
     void displayWaitingList() {
         if (waitingList.empty()) {
@@ -274,63 +238,29 @@ public:
             }
         }
     }
-
-    void occupySeats() {
-        int numSeats;
-        cout << "Enter the number of seats to occupy: ";
-        cin >> numSeats;
-
-        seatList.occupySeats(numSeats);
-    }
-
-    bool isAdminUser() {
-        return isAdmin;
-    }
-
-    void loginAdmin() {
-        string adminPassword;
-        cout << "Enter admin password: ";
-        cin.ignore();
-        getline(cin, adminPassword);
-
-        // Add password verification logic here
-        if (adminPassword == "admin") {
-            isAdmin = true;
-            cout << "Logged in as admin." << endl;
-        } else {
-            cout << "Incorrect password. Login failed." << endl;
-        }
-    }
-
-    void logoutAdmin() {
-        isAdmin = false;
-        cout << "Logged out from admin." << endl;
-    }
-
-    void displayAvailableSeats() {
-        seatList.displayAvailableSeats();
-    }
 };
 
 int main() {
     Canteen canteen;
+    bool isAdmin = false;
     int choice;
 
     while (true) {
         cout << "----------- Canteen Management System -----------" << endl;
-        canteen.displayMenu();
+        canteen.displayMenuPerStall();
         canteen.displayAvailableSeats();
         cout << "1. Add Customer" << endl;
-        cout << "2. Remove Customer from Waiting List" << endl;
+        cout << "2. Occupy Seats" << endl;
         cout << "3. Display Waiting List" << endl;
-        cout << "4. Occupy Seats" << endl;
 
-        if (canteen.isAdminUser()) {
-            cout << "5. Add Food" << endl;
-            cout << "6. Logout from Admin" << endl;
+        if (isAdmin) {
+            cout << "4. Add Food to Stall" << endl;
+            cout << "5. Remove Food from Stall" << endl;
+            cout << "6. Set Maximum Seats" << endl;
+            cout << "7. Logout" << endl;
         } else {
-            cout << "5. Login as Admin" << endl;
-            cout << "6. Exit" << endl;
+            cout << "4. Login as Admin" << endl;
+            cout << "5. Exit" << endl;
         }
 
         cout << "------------------------------------------------" << endl;
@@ -347,34 +277,72 @@ int main() {
                 break;
             }
             case 2:
-                canteen.removeCustomerFromWaitingList();
+                canteen.occupySeats();
                 break;
             case 3:
                 canteen.displayWaitingList();
                 break;
-            case 4:
-                canteen.occupySeats();
-                break;
-            case 5:
-                if (canteen.isAdminUser()) {
-                    string foodName;
+            case 4: {
+                if (isAdmin) {
+                    string foodName, stallName;
                     double foodPrice;
                     cout << "Enter food name: ";
                     cin.ignore();
                     getline(cin, foodName);
                     cout << "Enter food price: $";
                     cin >> foodPrice;
-                    canteen.addFood(foodName, foodPrice);
+                    cout << "Enter stall name: ";
+                    cin.ignore();
+                    getline(cin, stallName);
+                    canteen.addFoodToStall(foodName, foodPrice, stallName);
                 } else {
-                    canteen.loginAdmin();
+                    string adminPassword;
+                    cout << "Enter admin password: ";
+                    cin.ignore();
+                    getline(cin, adminPassword);
+
+                    // Add password verification logic here
+                    if (adminPassword == "pass") {
+                        isAdmin = true;
+                        cout << "Logged in as admin." << endl;
+                    } else {
+                        cout << "Incorrect password. Login failed." << endl;
+                    }
                 }
                 break;
-            case 6:
-                if (canteen.isAdminUser()) {
-                    canteen.logoutAdmin();
+            }
+            case 5:
+                if (isAdmin) {
+                    canteen.displayMenuPerStall();
+                    string foodName, stallName;
+                    cout << "Enter the food name to remove: ";
+                    cin.ignore();
+                    getline(cin, foodName);
+                    cout << "Enter the stall name: ";
+                    getline(cin, stallName);
+                    canteen.removeFoodFromStall(foodName, stallName);
                 } else {
                     cout << "Exiting the program..." << endl;
                     return 0;
+                }
+                break;
+            case 6:
+                if (isAdmin) {
+                    int maxSeats;
+                    cout << "Enter the maximum number of seats: ";
+                    cin >> maxSeats;
+                    canteen.setMaxSeats(maxSeats);
+                    cout << "Maximum seats set to " << maxSeats << "." << endl;
+                } else {
+                    cout << "Invalid choice. Please try again." << endl;
+                }
+                break;
+            case 7:
+                if (isAdmin) {
+                    isAdmin = false;
+                    cout << "Logged out." << endl;
+                } else {
+                    cout << "Invalid choice. Please try again." << endl;
                 }
                 break;
             default:
@@ -386,3 +354,4 @@ int main() {
 
     return 0;
 }
+
