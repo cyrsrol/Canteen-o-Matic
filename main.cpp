@@ -2,9 +2,9 @@
 //July 12, 2023. Improved the queue by adding the 'removing customers from waitlist' and 'viewing the waitlist' features.
 //July 13, 2023. Added and improved the seating feature.
 //July 14, 2023. Added a Food Menu and Waiting List per Stall.
+//July 14, 2023. Added the visitor history feature.
 
 // Will improve the UI
-// Will add the visitor history feature.
 
 #include <iostream>
 #include <queue>
@@ -24,7 +24,7 @@ struct MenuItem {
 
 class Menu {
 private:
-    map<string, vector<MenuItem>> menuItems;
+    map<string, queue<MenuItem>> menuItems;
 
 public:
     Menu() {
@@ -34,17 +34,23 @@ public:
     }
 
     void addFood(string name, double price, string stall) {
-        menuItems[stall].push_back(MenuItem(name, price));
+        menuItems[stall].push(MenuItem(name, price));
     }
 
     void removeFood(string name, string stall) {
         auto it = menuItems.find(stall);
         if (it != menuItems.end()) {
-            vector<MenuItem>& items = it->second;
-            items.erase(remove_if(items.begin(), items.end(), [&](const MenuItem& item) {
-                return item.name == name;
-            }), items.end());
-            cout << "Food item removed: " << name << endl;
+            queue<MenuItem>& items = it->second;
+            int itemCount = items.size();
+            for (int i = 0; i < itemCount; i++) {
+                MenuItem item = items.front();
+                if (item.name == name) {
+                    cout << "Food item removed: " << item.name << endl;
+                } else {
+                    items.push(item);
+                }
+                items.pop();
+            }
         } else {
             cout << "Stall not found." << endl;
         }
@@ -57,9 +63,12 @@ public:
             cout << "Food Menu per Stall:" << endl;
             for (const auto& stall : menuItems) {
                 cout << "Stall: " << stall.first << endl;
-                const vector<MenuItem>& items = stall.second;
-                for (const auto& item : items) {
+                const queue<MenuItem>& items = stall.second;
+                queue<MenuItem> temp = items;
+                while (!temp.empty()) {
+                    MenuItem item = temp.front();
                     cout << item.name << " - $" << item.price << endl;
+                    temp.pop();
                 }
                 cout << endl;
             }
@@ -168,6 +177,7 @@ private:
     Menu menu;
     SeatList seatList;
     queue<string> waitingList;
+    queue<string> visitorHistory;
     vector<string> stalls;
 
 public:
@@ -201,8 +211,10 @@ public:
 
     void serveNextCustomer() {
         if (!waitingList.empty()) {
-            cout << "Next customer: " << waitingList.front() << endl;
+            string customerName = waitingList.front();
             waitingList.pop();
+            visitorHistory.push(customerName);
+            cout << "Next customer: " << customerName << endl;
         } else {
             cout << "Waiting list is empty." << endl;
         }
@@ -238,6 +250,21 @@ public:
             }
         }
     }
+
+    void displayVisitorHistory() {
+        if (visitorHistory.empty()) {
+            cout << "Visitor history is empty." << endl;
+        } else {
+            cout << "Visitor history:" << endl;
+            int count = 1;
+            queue<string> temp = visitorHistory;
+            while (!temp.empty()) {
+                cout << count << ". " << temp.front() << endl;
+                temp.pop();
+                count++;
+            }
+        }
+    }
 };
 
 int main() {
@@ -258,7 +285,8 @@ int main() {
             cout << "5. Add Food to Stall" << endl;
             cout << "6. Remove Food from Stall" << endl;
             cout << "7. Set Maximum Seats" << endl;
-            cout << "8. Logout" << endl;
+            cout << "8. Display Visitor History" << endl;
+            cout << "9. Logout" << endl;
         } else {
             cout << "4. Login as Admin" << endl;
             cout << "5. Exit" << endl;
@@ -344,6 +372,13 @@ int main() {
                 }
                 break;
             case 8:
+                if (isAdmin) {
+                    canteen.displayVisitorHistory();
+                } else {
+                    cout << "Invalid choice. Please try again." << endl;
+                }
+                break;
+            case 9:
                 if (isAdmin) {
                     isAdmin = false;
                     cout << "Logged out." << endl;
