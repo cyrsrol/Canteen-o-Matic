@@ -74,6 +74,10 @@ public:
             }
         }
     }
+
+    bool isStallValid(string stall) {
+        return menuItems.count(stall) > 0;
+    }
 };
 
 struct Seat {
@@ -176,14 +180,19 @@ class Canteen {
 private:
     Menu menu;
     SeatList seatList;
-    map<string, queue<string>> waitingLists;  // Waiting list per stall
+    map<string, queue<string>> waitingList;
     queue<string> visitorHistory;
+    vector<string> stalls;
 
 public:
     Canteen() {}
 
     void setMaxSeats(int max) {
         seatList.setMaxSeats(max);
+    }
+
+    void addStall(string stallName) {
+        stalls.push_back(stallName);
     }
 
     void addFoodToStall(string name, double price, string stallName) {
@@ -200,18 +209,29 @@ public:
     }
 
     void addCustomerToWaitingList(string customerName, string stallName) {
-        waitingLists[stallName].push(customerName);
-        cout << customerName << " has been added to the waiting list of " << stallName << "." << endl;
+        if (menu.isStallValid(stallName)) {
+            waitingList[stallName].push(customerName);
+            cout << customerName << " has been added to the waiting list of " << stallName << "." << endl;
+        } else {
+            cout << "Invalid stall name. Please choose from the available stalls." << endl;
+        }
     }
 
-    void serveNextCustomer(string stallName) {
-        if (waitingLists[stallName].empty()) {
-            cout << "Waiting list for " << stallName << " is empty." << endl;
+    void serveNextCustomer() {
+        if (!waitingList.empty()) {
+            auto it = waitingList.begin();
+            string stallName = it->first;
+            if (!it->second.empty()) {
+                string customerName = it->second.front();
+                it->second.pop();
+                if (it->second.empty()) {
+                    waitingList.erase(it);
+                }
+                visitorHistory.push(customerName);
+                cout << "Next customer at " << stallName << ": " << customerName << endl;
+            }
         } else {
-            string customerName = waitingLists[stallName].front();
-            waitingLists[stallName].pop();
-            visitorHistory.push(customerName);
-            cout << "Next customer for " << stallName << ": " << customerName << endl;
+            cout << "Waiting list is empty." << endl;
         }
     }
 
@@ -232,17 +252,23 @@ public:
     }
 
     void displayWaitingList() {
-        cout << "Waiting lists for both stalls:" << endl;
-        for (const auto& stall : waitingLists) {
-            cout << "Stall " << stall.first << ":" << endl;
-            int count = 1;
-            queue<string> temp = stall.second;
-            while (!temp.empty()) {
-                cout << count << ". " << temp.front() << endl;
-                temp.pop();
-                count++;
+        if (waitingList.empty()) {
+            cout << "Waiting list is empty." << endl;
+        } else {
+            cout << "Waiting list:" << endl;
+            for (const auto& entry : waitingList) {
+                string stallName = entry.first;
+                const queue<string>& customers = entry.second;
+                cout << "Stall: " << stallName << endl;
+                queue<string> temp = customers;
+                int count = 1;
+                while (!temp.empty()) {
+                    cout << count << ". " << temp.front() << endl;
+                    temp.pop();
+                    count++;
+                }
+                cout << endl;
             }
-            cout << endl;
         }
     }
 
@@ -265,6 +291,7 @@ public:
 int main() {
     Canteen canteen;
     bool isAdmin = false;
+    string adminPassword = "pass"; // Set the admin password here
     int choice;
 
     while (true) {
@@ -297,14 +324,9 @@ int main() {
                 cout << "Enter customer name: ";
                 cin.ignore();
                 getline(cin, customerName);
-                cout << "Enter the stall name (A or B): ";
+                cout << "Enter stall name: ";
                 getline(cin, stallName);
-                transform(stallName.begin(), stallName.end(), stallName.begin(), ::toupper);
-                if (stallName == "A" || stallName == "B") {
-                    canteen.addCustomerToWaitingList(customerName, stallName);
-                } else {
-                    cout << "Invalid stall name. Please try again." << endl;
-                }
+                canteen.addCustomerToWaitingList(customerName, stallName);
                 break;
             }
             case 2:
@@ -313,25 +335,16 @@ int main() {
             case 3:
                 canteen.displayWaitingList();
                 break;
-            case 4: {
+            case 4:
                 if (isAdmin) {
-                    string stallName;
-                    cout << "Enter the stall name (A or B): ";
-                    cin.ignore();
-                    getline(cin, stallName);
-                    transform(stallName.begin(), stallName.end(), stallName.begin(), ::toupper);
-                    if (stallName == "A" || stallName == "B") {
-                        canteen.serveNextCustomer(stallName);
-                    } else {
-                        cout << "Invalid stall name. Please try again." << endl;
-                    }
+                    canteen.serveNextCustomer();
                 } else {
-                    string adminPassword;
+                    string password;
                     cout << "Enter admin password: ";
                     cin.ignore();
-                    getline(cin, adminPassword);
+                    getline(cin, password);
 
-                    if (adminPassword == "pass") {
+                    if (password == adminPassword) {
                         isAdmin = true;
                         cout << "Logged in as admin." << endl;
                     } else {
@@ -339,45 +352,24 @@ int main() {
                     }
                 }
                 break;
-            }
             case 5:
+                if (isAdmin) {
+                    cout << "Exiting the program..." << endl;
+                    return 0;
+                } else {
+                    cout << "Invalid choice. Please try again." << endl;
+                }
+                break;
+            case 6:
                 if (isAdmin) {
                     canteen.displayMenuPerStall();
                     string foodName, stallName;
                     cout << "Enter the food name to remove: ";
                     cin.ignore();
                     getline(cin, foodName);
-                    cout << "Enter the stall name (A or B): ";
+                    cout << "Enter the stall name: ";
                     getline(cin, stallName);
-                    transform(stallName.begin(), stallName.end(), stallName.begin(), ::toupper);
-                    if (stallName == "A" || stallName == "B") {
-                        canteen.removeFoodFromStall(foodName, stallName);
-                    } else {
-                        cout << "Invalid stall name. Please try again." << endl;
-                    }
-                } else {
-                    cout << "Exiting the program..." << endl;
-                    return 0;
-                }
-                break;
-            case 6:
-                if (isAdmin) {
-                    string foodName, stallName;
-                    double foodPrice;
-                    cout << "Enter food name: ";
-                    cin.ignore();
-                    getline(cin, foodName);
-                    cout << "Enter food price: $";
-                    cin >> foodPrice;
-                    cout << "Enter the stall name (A or B): ";
-                    cin.ignore();
-                    getline(cin, stallName);
-                    transform(stallName.begin(), stallName.end(), stallName.begin(), ::toupper);
-                    if (stallName == "A" || stallName == "B") {
-                        canteen.addFoodToStall(foodName, foodPrice, stallName);
-                    } else {
-                        cout << "Invalid stall name. Please try again." << endl;
-                    }
+                    canteen.removeFoodFromStall(foodName, stallName);
                 } else {
                     cout << "Invalid choice. Please try again." << endl;
                 }
