@@ -1,13 +1,14 @@
-//July 10, 2023. Finished on making the initial code, currently planning and polishing the main features.
+//July 10, 2023. Finished on making the base code, currently planning and polishing the main features.
 //July 12, 2023. Improved the queue by adding the 'viewing the waitlist' features.
-//July 13, 2023. Added and improved the seating feature.
-//July 14, 2023. Added a Food Menu and Waiting List per Stall.
+//July 13, 2023. Fixed the seating feature.
+//July 14, 2023. Added <map> and <algorithm> to display and sort Food Menu and Waiting List per Stall.
 //July 14, 2023. Added the visitor history feature.
 //July 16, 2023. Added <ctime> to record when the customer joins the waiting list, and when they get served.
 //July 16, 2023. Improved the UI using <iomanip>.
-//July 16, 2023. Improved some of the features also apply some error handling.
+//July 16, 2023. Improved and changed some of the features and apply some error handling.
+//July 17, 2023. Improved the UI and added <windows.h> to apply color to text.
 
-//Will continue to improve the UI.
+//Will check for Error.
 
 #include <iostream>
 #include <queue>
@@ -16,8 +17,24 @@
 #include <iomanip>
 #include <ctime>
 #include <windows.h>
+
 using namespace std;
 
+HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+
+void header() {
+    SetConsoleTextAttribute(h, 11);
+    cout << "\t\t _____  _____  _   _  _____  _____  _____  _   _           __   __  _____  _____  __  _____ \n";
+    cout << "\t\t|     ||  _  || | | ||     ||     ||     || | | |  _____  |  |_|  ||  _  ||     ||  ||     |\n";
+    cout << "\t\t|   __|| |_| ||  || ||_   _||  ___||  ___||  || | |  _  | |       || |_| ||_   _||  ||   __|\n";
+    cout << "\t\t|  |   |     ||   ' |  | |  | |___ | |___ |   ' | | | | | |       ||     |  | |  |  ||  |   \n";
+    cout << "\t\t|  |__ |  _  ||  .  |  | |  |  ___||  ___||  .  | | |_| | | ||_|| ||  _  |  | |  |  ||  |__ \n";
+    cout << "\t\t|     || | | || | ' |  | |  | |___ | |___ | |   | |_____| | |   | || | | |  | |  |  ||     |\n";
+    cout << "\t\t|_____||_| |_||_| |_|  |_|  |_____||_____||_| |_|         |_|   |_||_| |_|  |_|  |__||_____|\n\n";
+    SetConsoleTextAttribute(h, 14);
+    cout << "\t\t-------------------------------- Canteen Management System ----------------------------------\n\n";
+    SetConsoleTextAttribute(h, 15);
+}
 struct MenuItem {
     string name;
     double price;
@@ -34,9 +51,14 @@ private:
 
 public:
     Menu() {
-        addFood("Burger", 4.99, "Stall A");
-        addFood("Pizza", 7.99, "Stall B");
-        addFood("Salad", 5.99, "Stall A");
+        /*
+        addFood("Burger", 50, "Mcdo");
+        addFood("Fries", 35, "Mcdo");
+        addFood("Chicken Joy", 90, "Jabe");
+        addFood("CokeFloat", 40, "Jabe");
+        addFood("Chicken", 90, "KFC");
+        addFood("Inihaw", 99, "Mang Inisal");
+        */
     }
 
     void addFood(const string& name, double price, const string& stall) {
@@ -51,21 +73,34 @@ public:
             for (int i = 0; i < itemCount; i++) {
                 MenuItem item = items.front();
                 if (item.name == name) {
-                    cout << "Food item removed: " << item.name << endl;
+                    system("cls");
+                    SetConsoleTextAttribute(h, 10);
+                    cout << "\t\tFood item removed: " << item.name;
+                    SetConsoleTextAttribute(h, 15);
                 } else {
+                    system("cls");
+                    SetConsoleTextAttribute(h, 12);
+                    cout << "\t\tFood name not found.";
+                    SetConsoleTextAttribute(h, 15);
                     items.push(item);
                 }
                 items.pop();
             }
         } else {
-            cout << "Stall not found." << endl;
+            SetConsoleTextAttribute(h, 12);
+            system("cls");
+            cout << "\t\tStall not found.";
+            SetConsoleTextAttribute(h, 15);
         }
     }
 
     void displayMenuPerStall() {
         if (menuItems.empty()) {
-            cout << "Menu is empty." << endl;
+            SetConsoleTextAttribute(h, 12);
+            cout << "\t\tMenu is empty.\n";
+            SetConsoleTextAttribute(h, 15);
         } else {
+            int count = 0;
             vector<string> uniqueStalls;
             for (const auto& stall : menuItems) {
                 uniqueStalls.push_back(stall.first);
@@ -77,27 +112,28 @@ public:
                 maxItems = max(maxItems, static_cast<int>(menuItems[stall].size()));
             }
 
-            int nameWidth = 12; // Width for displaying food names
-            int priceWidth = 6; // Width for displaying food prices
-
-            cout << "\t\t+";
+            int nameWidth = 12;
+            int priceWidth = 6;
+            SetConsoleTextAttribute(h, 11);
+            cout << "\t\t  +";
             for (size_t i = 0; i < uniqueStalls.size(); ++i) {
+
                 cout << "---------------------+";
             }
-            cout << "" << endl;
-            cout << "\t\t";
+            cout << "\n";
+            cout << "\t\t  ";
             for (const auto& stall : uniqueStalls) {
                 cout << "| " << setw(nameWidth + priceWidth + 2) << left << stall;
             }
-            cout << "|" << endl;
+            cout << "|\n";
 
-            cout << "\t\t|";
+            cout << "\t\t  |";
             for (size_t i = 0; i < uniqueStalls.size(); ++i) {
                 cout << "---------------------|";
             }
-            cout << "" << endl;
+            cout << "\n";
             for (int i = 0; i < maxItems; i++) {
-                cout << "\t\t";
+                cout << "\t\t  ";
                 for (const auto& stall : uniqueStalls) {
                     if (i < menuItems[stall].size()) {
                         MenuItem item = menuItems[stall].front();
@@ -108,14 +144,15 @@ public:
                         cout << "| " << setw(nameWidth) << right << " " << setw(priceWidth + 2) << right << "";
                     }
                 }
-                cout << "|" << endl;
+                cout << "|\n";
             }
 
-            cout << "\t\t+";
+            cout << "\t\t  +";
             for (size_t i = 0; i < uniqueStalls.size(); ++i) {
                 cout << "---------------------+";
             }
-            cout << "" << endl;
+            cout << "\n";
+            SetConsoleTextAttribute(h, 15);
         }
     }
 
@@ -189,7 +226,9 @@ public:
     }
 
     void displayAvailableSeats() {
-        cout << "Available seats: " << availableSeats << endl;
+        SetConsoleTextAttribute(h, 11);
+        cout << "Available seats: " << availableSeats << "\n";
+        SetConsoleTextAttribute(h, 15);
     }
 
     int getAvailableSeatCount() {
@@ -198,7 +237,10 @@ public:
 
     bool occupySeats(int numSeats) {
         if (numSeats <= 0 || numSeats > availableSeats) {
-            cout << "Invalid number of seats to occupy." << endl;
+            system("cls");
+            SetConsoleTextAttribute(h, 12);
+            cout << "\t\tInvalid number of seats to occupy.";
+            SetConsoleTextAttribute(h, 15);
             return false;
         }
 
@@ -215,10 +257,16 @@ public:
         }
 
         if (occupiedCount == numSeats) {
-            cout << "Successfully occupied " << occupiedCount << " seat(s)." << endl;
+            system("cls");
+            SetConsoleTextAttribute(h, 10);
+            cout << "\t\tSuccessfully occupied " << occupiedCount << " seat(s).";
+            SetConsoleTextAttribute(h, 15);
             return true;
         } else {
-            cout << "Insufficient available seats." << endl;
+            system("cls");
+            SetConsoleTextAttribute(h, 12);
+            cout << "\t\tInsufficient available seats.";
+            SetConsoleTextAttribute(h, 15);
             return false;
         }
     }
@@ -245,7 +293,10 @@ public:
 
     void addFoodToStall(const string& name, double price, const string& stallName) {
         menu.addFood(name, price, stallName);
-        cout << "Food item added: " << name << " - $" << price << " (Stall: " << stallName << ")" << endl;
+        system("cls");
+        SetConsoleTextAttribute(h, 10);
+        cout << "\t\tFood item added: " << name << " - $" << price << " (Stall: " << stallName << ")";
+        SetConsoleTextAttribute(h, 15);
     }
 
     void removeFoodFromStall(const string& name, const string& stallName) {
@@ -260,19 +311,38 @@ public:
         if (menu.isStallValid(stallName)) {
             time_t currentTime = time(nullptr);
             waitingList[stallName].push(make_pair(currentTime, customerName));
-            cout << customerName << " has been added to the waiting list of " << stallName << "." << endl;
+            system("cls");
+            SetConsoleTextAttribute(h, 10);
+            cout << "\t\t" << customerName << " has been added to the waiting list of " << stallName << ".";
+            SetConsoleTextAttribute(h, 15);
         } else {
-            cout << "Invalid stall name. Please choose from the available stalls." << endl;
+            system("cls");
+            SetConsoleTextAttribute(h, 12);
+            cout << "\t\tInvalid stall name. Please choose from the available stalls.";
+            SetConsoleTextAttribute(h, 15);
         }
     }
 
     void serveCustomer() {
-        string stallName;
-        cout << "Enter the stall name: ";
-        cin.ignore();
-        getline(cin, stallName);
-
         if (!waitingList.empty()) {
+            system("cls");
+            SetConsoleTextAttribute(h, 11);
+            cout << "\t\t\t\t\t _______  _______  ______    __   __  _______ \n";
+            cout << "\t\t\t\t\t|       ||       ||    _ |  |  | |  ||       |\n";
+            cout << "\t\t\t\t\t|  _____||    ___||   | ||  |  |_|  ||    ___|\n";
+            cout << "\t\t\t\t\t| |_____ |   |___ |   |_||_ |       ||   |___ \n";
+            cout << "\t\t\t\t\t|_____  ||    ___||    __  ||       ||    ___|\n";
+            cout << "\t\t\t\t\t _____| ||   |___ |   |  | | |     | |   |___ \n";
+            cout << "\t\t\t\t\t|_______||_______||___|  |_|  |___|  |_______|\n";
+            cout << "\n\t\t---------------------------------------------------------------------------------------------\n";
+            displayWaitingList();
+            SetConsoleTextAttribute(h, 14);
+            string stallName;
+            SetConsoleTextAttribute(h, 14);
+            cout << "\t\t\t\tEnter the stall name: ";
+            SetConsoleTextAttribute(h, 15);
+            cin.ignore();
+            getline(cin, stallName);
             auto it = waitingList.find(stallName);
             if (it != waitingList.end() && !it->second.empty()) {
                 time_t servedTime = time(nullptr);
@@ -282,15 +352,41 @@ public:
                 if (it->second.empty()) {
                     waitingList.erase(it);
                 }
-                cout << "Customer at " << stallName << ": " << customerName << endl;
-                cout << "Joined at: " << ctime(&joinedTime);
-                cout << "Served at: " << ctime(&servedTime);
+                system("cls");
+                SetConsoleTextAttribute(h, 11);
+                cout << "\t\t\t\t    _______  _______  ______    __   __  _______  ______  \n";
+                cout << "\t\t\t\t   |       ||       ||    _ |  |  | |  ||       ||      | \n";
+                cout << "\t\t\t\t   |  _____||    ___||   | ||  |  |_|  ||    ___||  _    |\n";
+                cout << "\t\t\t\t   | |_____ |   |___ |   |_||_ |       ||   |___ | | |   |\n";
+                cout << "\t\t\t\t   |_____  ||    ___||    __  ||       ||    ___|| |_|   |\n";
+                cout << "\t\t\t\t    _____| ||   |___ |   |  | | |     | |   |___ |       |\n";
+                cout << "\t\t\t\t   |_______||_______||___|  |_|  |___|  |_______||______| \n";
+                cout << "\n\t\t---------------------------------------------------------------------------------------------\n";
+                SetConsoleTextAttribute(h, 14);
+                cout << "\t\t\t\t   Customer at " << stallName << ": " << customerName << "\n";
+                SetConsoleTextAttribute(h, 10);
+                cout << "\t\t\t\t   Joined at: " << ctime(&joinedTime);
+                SetConsoleTextAttribute(h, 12);
+                cout << "\t\t\t\t   Served at: " << ctime(&servedTime);
+                SetConsoleTextAttribute(h, 15);
                 visitorHistory.push(customerName);
+                SetConsoleTextAttribute(h, 11);
+                cout << "\t\t---------------------------------------------------------------------------------------------\n";
+                cout << "\t\t\t\t   ";
+                SetConsoleTextAttribute(h, 15);
+                system("pause");
+                system("cls");
             } else {
-                cout << "No customer to serve at " << stallName << "." << endl;
+                system("cls");
+                SetConsoleTextAttribute(h, 12);
+                cout << "\t\tInvalid stall name. Please choose from the available stalls..";
+                SetConsoleTextAttribute(h, 15);
             }
         } else {
-            cout << "Waiting list is empty." << endl;
+            system("cls");
+            SetConsoleTextAttribute(h, 12);
+            cout << "\t\tWaiting list is empty.";
+            SetConsoleTextAttribute(h, 15);
         }
     }
 
@@ -303,19 +399,37 @@ public:
     }
 
     void occupySeats() {
+        system("cls");
+        SetConsoleTextAttribute(h, 11);
+        cout << "\t\t _______  _______  _______  __   __  _______  __   __    _______  _______  _______  _______ \n";
+        cout << "\t\t|       ||       ||       ||  | |  ||       ||  | |  |  |       ||       ||   _   ||       |\n";
+        cout << "\t\t|   _   ||       ||       ||  | |  ||    _  ||  |_|  |  |  _____||    ___||  |_|  ||_     _|\n";
+        cout << "\t\t|  | |  ||       ||       ||  |_|  ||   |_| ||       |  | |_____ |   |___ |       |  |   |  \n";
+        cout << "\t\t|  |_|  ||      _||      _||       ||    ___||_     _|  |_____  ||    ___||       |  |   |  \n";
+        cout << "\t\t|       ||     |_ |     |_ |       ||   |      |   |     _____| ||   |___ |   _   |  |   |  \n";
+        cout << "\t\t|_______||_______||_______||_______||___|      |___|    |_______||_______||__| |__|  |___|  \n";
+        cout << "\n\t\t---------------------------------------------------------------------------------------------\n";
+        SetConsoleTextAttribute(h, 14);
         int numSeats;
-        cout << "Enter the number of seats to occupy: ";
+        cout << "\t\t\t\t\tEnter the number of seats to occupy: ";
+        SetConsoleTextAttribute(h, 15);
         cin >> numSeats;
 
         if (cin.fail()) {
-            cout << "Invalid input. Please enter a valid number." << endl;
+            system("cls");
+            SetConsoleTextAttribute(h, 12);
+            cout << "\t\tInvalid input. Please enter a valid number.";
+            SetConsoleTextAttribute(h, 15);
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             return;
         }
 
         if (numSeats <= 0) {
-            cout << "Invalid number of seats to occupy. Please enter a positive number." << endl;
+            system("cls");
+            SetConsoleTextAttribute(h, 12);
+            cout << "\t\tInvalid number of seats to occupy. Please enter a positive number.";
+            SetConsoleTextAttribute(h, 15);
             return;
         }
 
@@ -324,13 +438,16 @@ public:
 
     void displayWaitingList() {
         if (waitingList.empty()) {
-            cout << "Waiting list is empty." << endl;
+            system("cls");
+            SetConsoleTextAttribute(h, 12);
+            cout << "\t\tWaiting list is empty.";
+            SetConsoleTextAttribute(h, 15);
         } else {
-            cout << "\t\t\t\t--------------------- Waiting List ---------------------" << endl;
             for (const auto& entry : waitingList) {
                 string stallName = entry.first;
                 const queue<pair<time_t, string>>& customers = entry.second;
-                cout << "\t\t\t\t\tStall: " << stallName << endl;
+                SetConsoleTextAttribute(h, 14);
+                cout << "\t\t" << stallName << "\n";
                 queue<pair<time_t, string>> temp = customers;
                 int count = 1;
                 while (!temp.empty()) {
@@ -339,42 +456,85 @@ public:
                     struct tm* timeInfo = localtime(&joinedTime);
                     char timeStr[80];
                     strftime(timeStr, sizeof(timeStr), "%c", timeInfo);
-                    cout << "\t\t\t\t\t" << count << ". " << customerName << " (Joined at: " << timeStr << ")" << endl;
+                    SetConsoleTextAttribute(h, 10);
+                    cout << "\t\t" << count << ". " << customerName << " (Joined at: " << timeStr << ")\n";
                     temp.pop();
                     count++;
                 }
-                cout << endl;
+                cout << "\n";
             }
-            cout << "\t\t\t\t--------------------------------------------------------" << endl;
+            SetConsoleTextAttribute(h, 11);
+            cout << "\n\t\t---------------------------------------------------------------------------------------------\n";
+            SetConsoleTextAttribute(h, 15);
+            cout << "\t\t";
+
         }
     }
 
     void displayVisitorHistory() {
         if (visitorHistory.empty()) {
-            cout << "Visitor history is empty." << endl;
+            system("cls");
+            SetConsoleTextAttribute(h, 12);
+            cout << "\t\tVisitor history is empty.";
+            SetConsoleTextAttribute(h, 15);
         } else {
-            cout << "Visitor history:" << endl;
+            system("cls");
+            SetConsoleTextAttribute(h, 11);
+            cout << "\t\t\t\t __   __  ___   _______  _______  _______  ______    __   __ \n";
+            cout << "\t\t\t\t|  | |  ||   | |       ||       ||       ||    _ |  |  | |  |\n";
+            cout << "\t\t\t\t|  |_|  ||   | |  _____||_     _||   _   ||   | ||  |  |_|  |\n";
+            cout << "\t\t\t\t|       ||   | | |_____   |   |  |  | |  ||   |_||_ |       |\n";
+            cout << "\t\t\t\t|       ||   | |_____  |  |   |  |  |_|  ||    __  ||_     _|\n";
+            cout << "\t\t\t\t|   _   ||   |  _____| |  |   |  |       ||   |  | |  |   |  \n";
+            cout << "\t\t\t\t|__| |__||___| |_______|  |___|  |_______||___|  |_|  |___|  \n";
+            cout << "\n\t\t---------------------------------------------------------------------------------------------\n";
+            SetConsoleTextAttribute(h, 14);
             int count = 1;
             queue<string> temp = visitorHistory;
             while (!temp.empty()) {
-                cout << count << ". " << temp.front() << endl;
+                cout << "\t\t\t\t" << count << ". " << temp.front() << "\n";
                 temp.pop();
                 count++;
             }
+            SetConsoleTextAttribute(h, 11);
+            cout << "\t\t---------------------------------------------------------------------------------------------\n";
+            SetConsoleTextAttribute(h, 15);
+            cout << "\t\t\t\t";
+            system("pause");
+            system("cls");
         }
     }
 };
 
 void queueIn(Canteen& canteen) {
-    canteen.addCustomerToWaitingList("polo1", "Stall A");
-    canteen.addCustomerToWaitingList("polo2", "Stall A");
-    canteen.addCustomerToWaitingList("mary1", "Stall B");
-    canteen.addCustomerToWaitingList("mary2", "Stall B");
+    canteen.addCustomerToWaitingList("polo1", "Mcdo");
+    canteen.addCustomerToWaitingList("polo2", "Jabe");
+    canteen.addCustomerToWaitingList("mary1", "Mcdo");
+    canteen.addCustomerToWaitingList("mary2", "Jabe");
     string customerName, stallName;
-    cout << "Enter stall name: ";
+    system("cls");
+    SetConsoleTextAttribute(h, 11);
+    cout << "\t\t\t\t _______  __   __  _______  __   __  _______    ___   __    _ \n";
+    cout << "\t\t\t\t|       ||  | |  ||       ||  | |  ||       |  |   | |  |  | |\n";
+    cout << "\t\t\t\t|   _   ||  | |  ||    ___||  | |  ||    ___|  |   | |   |_| |\n";
+    cout << "\t\t\t\t|  | |  ||  |_|  ||   |___ |  |_|  ||   |___   |   | |       |\n";
+    cout << "\t\t\t\t|  |_|  ||       ||    ___||       ||    ___|  |   | |  _    |\n";
+    cout << "\t\t\t\t|      | |       ||   |___ |       ||   |___   |   | | | |   |\n";
+    cout << "\t\t\t\t|____||_||_______||_______||_______||_______|  |___| |_|  |__|\n";
+    cout << "\n\t\t---------------------------------------------------------------------------------------------\n";
+    SetConsoleTextAttribute(h, 14);
+    cout << "\n\t\t----------------------------------------- Food Menu -----------------------------------------\n";
+    canteen.displayMenuPerStall();
+    SetConsoleTextAttribute(h, 11);
+    cout << "\n\t\t---------------------------------------------------------------------------------------------\n";
+    SetConsoleTextAttribute(h, 14);
+    cout << "\t\t\t\t\t\tEnter stall name: ";
+    SetConsoleTextAttribute(h, 15);
     cin.ignore();
     getline(cin, stallName);
-    cout << "Enter customer name: ";
+    SetConsoleTextAttribute(h, 14);
+    cout << "\t\t\t\t\t\tEnter customer name: ";
+    SetConsoleTextAttribute(h, 15);
     getline(cin, customerName);
     canteen.addCustomerToWaitingList(customerName, stallName);
 }
@@ -388,25 +548,43 @@ void addFoodToStall(Canteen& canteen) {
     string newFoodName, stallName;
     double newFoodPrice;
 
-    cout << "Enter the food name to add: ";
+    system("cls");
+    SetConsoleTextAttribute(h, 10);
+    cout << "\t\t\t\t _______  ______   ______     _______  _______  _______  ______  \n";
+    cout << "\t\t\t\t|   _   ||      | |      |   |       ||       ||       ||      | \n";
+    cout << "\t\t\t\t|  |_|  ||  _    ||  _    |  |    ___||   _   ||   _   ||  _    |\n";
+    cout << "\t\t\t\t|       || | |   || | |   |  |   |___ |  | |  ||  | |  || | |   |\n";
+    cout << "\t\t\t\t|       || |_|   || |_|   |  |    ___||  |_|  ||  |_|  || |_|   |\n";
+    cout << "\t\t\t\t|   _   ||       ||       |  |   |    |       ||       ||       |\n";
+    cout << "\t\t\t\t|__| |__||______| |______|   |___|    |_______||_______||______| \n";
+    SetConsoleTextAttribute(h, 11);
+    cout << "\n\t\t---------------------------------------------------------------------------------------------\n";
+    SetConsoleTextAttribute(h, 14);
+    cout << "\t\t\t\t\t\tEnter the food name to add: ";
+    SetConsoleTextAttribute(h, 15);
     cin.ignore();
     getline(cin, newFoodName);
 
     if (newFoodName.length() > 12) {
         newFoodName = newFoodName.substr(0, 12);
     }
-
-    cout << "Enter the food price: $";
+    SetConsoleTextAttribute(h, 14);
+    cout << "\t\t\t\t\t\tEnter the food price: $";
+    SetConsoleTextAttribute(h, 15);
     cin >> newFoodPrice;
 
     if (cin.fail()) {
-        cout << "Invalid input. Please enter a valid number." << endl;
+        system("cls");
+        SetConsoleTextAttribute(h, 12);
+        cout << "\t\tInvalid input. Please enter a valid number.";
+        SetConsoleTextAttribute(h, 15);
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         return;
     }
-
-    cout << "Enter the stall name: ";
+    SetConsoleTextAttribute(h, 14);
+    cout << "\t\t\t\t\t\tEnter the stall name: ";
+    SetConsoleTextAttribute(h, 15);
     cin.ignore();
     getline(cin, stallName);
 
@@ -418,18 +596,33 @@ void addFoodToStall(Canteen& canteen) {
 }
 
 void removeFoodFromStall(Canteen& canteen) {
+    system("cls");
+    SetConsoleTextAttribute(h, 12);
+    cout << "\t\t ______    _______  __   __  _______  __   __  _______    _______  _______  _______  ______  \n";
+    cout << "\t\t|    _ |  |       ||  |_|  ||       ||  | |  ||       |  |       ||       ||       ||      | \n";
+    cout << "\t\t|   | ||  |    ___||       ||   _   ||  |_|  ||    ___|  |    ___||   _   ||   _   ||  _    |\n";
+    cout << "\t\t|   |_||_ |   |___ |       ||  | |  ||       ||   |___   |   |___ |  | |  ||  | |  || | |   |\n";
+    cout << "\t\t|    __  ||    ___||       ||  |_|  ||       ||    ___|  |    ___||  |_|  ||  |_|  || |_|   |\n";
+    cout << "\t\t|   |  | ||   |___ | ||_|| ||       | |     | |   |___   |   |    |       ||       ||       |\n";
+    cout << "\t\t|___|  |_||_______||_|   |_||_______|  |___|  |_______|  |___|    |_______||_______||______| \n";
+    SetConsoleTextAttribute(h, 11);
+    cout << "\n\t\t---------------------------------------------------------------------------------------------\n";
     canteen.displayMenuPerStall();
     string removeFoodName, stallName;
-
-    cout << "Enter the food name to remove: ";
+    SetConsoleTextAttribute(h, 11);
+    cout << "\n\t\t---------------------------------------------------------------------------------------------\n";
+    SetConsoleTextAttribute(h, 14);
+    cout << "\t\t\t\t\t\tEnter the food name to remove: ";
+    SetConsoleTextAttribute(h, 15);
     cin.ignore();
     getline(cin, removeFoodName);
 
     if (removeFoodName.length() > 12) {
         removeFoodName = removeFoodName.substr(0, 12);
     }
-
-    cout << "Enter the stall name: ";
+    SetConsoleTextAttribute(h, 14);
+    cout << "\t\t\t\t\t\tEnter the stall name: ";
+    SetConsoleTextAttribute(h, 15);
     getline(cin, stallName);
 
     if (stallName.length() > 12) {
@@ -441,44 +634,73 @@ void removeFoodFromStall(Canteen& canteen) {
 
 void setMaxSeats(Canteen& canteen) {
     int maxSeats;
-    cout << "Enter the maximum number of seats: ";
+    system("cls");
+    SetConsoleTextAttribute(h, 11);
+    cout << "\t\t\t   _______  ______   ______     _______  _______  _______  _______  _______ \n";
+    cout << "\t\t\t  |   _   ||      | |      |   |       ||       ||   _   ||       ||       |\n";
+    cout << "\t\t\t  |  |_|  ||  _    ||  _    |  |  _____||    ___||  |_|  ||_     _||  _____|\n";
+    cout << "\t\t\t  |       || | |   || | |   |  | |_____ |   |___ |       |  |   |  | |_____ \n";
+    cout << "\t\t\t  |       || |_|   || |_|   |  |_____  ||    ___||       |  |   |  |_____  |\n";
+    cout << "\t\t\t  |   _   ||       ||       |   _____| ||   |___ |   _   |  |   |   _____| |\n";
+    cout << "\t\t\t  |__| |__||______| |______|   |_______||_______||__| |__|  |___|  |_______|\n";
+    cout << "\n\t\t---------------------------------------------------------------------------------------------\n";
+    SetConsoleTextAttribute(h, 14);
+    cout << "\t\t\t\t\tEnter the number of seat(s) to be added: ";
+    SetConsoleTextAttribute(h, 15);
     cin >> maxSeats;
 
     if (cin.fail()) {
-        cout << "Invalid input. Please enter a valid number." << endl;
+        system("cls");
+        SetConsoleTextAttribute(h, 12);
+        cout << "\t\tInvalid input. Please enter a valid number.";
+        SetConsoleTextAttribute(h, 15);
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         return;
     }
 
     if (maxSeats <= 0) {
-        cout << "Invalid number of seats. Please enter a positive number." << endl;
+        system("cls");
+        SetConsoleTextAttribute(h, 12);
+        cout << "\t\tInvalid number of seat(s). Please enter a positive number.";
+    SetConsoleTextAttribute(h, 15);
         return;
     }
 
     canteen.setMaxSeats(maxSeats);
-    cout << "Maximum seats set to " << maxSeats << "." << endl;
+    system("cls");
+    SetConsoleTextAttribute(h, 10);
+    cout << "\t\tAdded " << maxSeats << " Seat(s).";
+    SetConsoleTextAttribute(h, 15);
 }
 
 void adminMenu(Canteen& canteen) {
     int choice;
     do {
-        cout << "\t\t .--.  _____  _  _  _____  ___  ___  _  _        .---.        .-._.-.  _____  _____  _  ____ \n";
-        cout << "\t\t'  __)'  _  '| || |(_   _)| __)| __)| || |  __  '  _  '  __  |  _ _  ||  _  |(_   _)'_'|  __)\n";
-        cout << "\t\t| |__ | (_) || .` |  | |  | _) | _) | .` | (__) | [_] | (__) | | v | || (_) |  | |  | || |__ \n";
-        cout << "\t\t'.___)|_[ ]_||_||_|  |_|  |___)|___)|_||_|      '.___.'      |_|   |_||_[ ]_|  |_|  |_||____)\n";
-        cout << "\n";
-        cout << "\t\t-------------------------------- Canteen Management System ----------------------------------\n\n";
-        cout << "\t\t\t\t\t\t--------- Admin Menu ---------" << endl;
-        cout << "\t\t\t\t\t\t1. Serve Customer" << endl;
-        cout << "\t\t\t\t\t\t2. Add Food to Stall" << endl;
-        cout << "\t\t\t\t\t\t3. Remove Food from Stall" << endl;
-        cout << "\t\t\t\t\t\t4. Add Seats" << endl;
-        cout << "\t\t\t\t\t\t5. Display Visitor History" << endl;
-        cout << "\t\t\t\t\t\t6. Logout" << endl;
-        cout << "\n\t\t---------------------------------------------------------------------------------------------" << endl;
+        header();
+        SetConsoleTextAttribute(h, 11);
+        cout << "\n\t\t--------------------------------------- Admin Menu -----------------------------------------\n\n";
+        cout << "\t\t\t\t\t\t1. Serve Customer\n";
+        cout << "\t\t\t\t\t\t2. Add Food to Stall\n";
+        cout << "\t\t\t\t\t\t3. Remove Food from Stall\n";
+        cout << "\t\t\t\t\t\t4. Add Seats\n";
+        cout << "\t\t\t\t\t\t5. Display Visitor History\n";
+        cout << "\t\t\t\t\t\t6. Logout\n";
+        cout << "\n\t\t---------------------------------------------------------------------------------------------\n";
+        SetConsoleTextAttribute(h, 14);
         cout << "\t\t\t\t\t\tEnter your choice: ";
+        SetConsoleTextAttribute(h, 15);
         cin >> choice;
+
+        if (cin.fail()) {
+            SetConsoleTextAttribute(h, 12);
+            system("cls");
+            cout << "\t\tInvalid input. Please enter a valid number." << endl;
+            SetConsoleTextAttribute(h, 15);
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
 
         switch (choice) {
             case 1:
@@ -497,13 +719,19 @@ void adminMenu(Canteen& canteen) {
                 canteen.displayVisitorHistory();
                 break;
             case 6:
-                cout << "\t\tLogged out from admin menu." << endl;
+                system("cls");
+                SetConsoleTextAttribute(h, 10);
+                cout << "\t\tLogged out from admin menu.";
+                SetConsoleTextAttribute(h, 15);
                 return;
             default:
-                cout << "\t\tInvalid choice. Please try again." << endl;
+                system("cls");
+                SetConsoleTextAttribute(h, 12);
+                cout << "\t\tInvalid choice. Please try again.";
+                SetConsoleTextAttribute(h, 15);
         }
 
-        cout << endl;
+        cout << "\n";
     } while (true);
 }
 
@@ -511,20 +739,40 @@ void loginAsAdmin(Canteen& canteen, bool& isAdmin, const string& adminPassword) 
     string password;
     int invalidAttempts = 0;
     do {
-        cout << "\t\tEnter admin password: ";
+        SetConsoleTextAttribute(h, 11);
+        cout << "\t\t    _______  ______   __   __  ___   __    _    ___      _______  _______  ___   __    _ \n";
+        cout << "\t\t   |   _   ||      | |  |_|  ||   | |  |  | |  |   |    |       ||       ||   | |  |  | |\n";
+        cout << "\t\t   |  |_|  ||  _    ||       ||   | |   |_| |  |   |    |   _   ||    ___||   | |   |_| |\n";
+        cout << "\t\t   |       || | |   ||       ||   | |       |  |   |    |  | |  ||   | __ |   | |       |\n";
+        cout << "\t\t   |       || |_|   ||       ||   | |  _    |  |   |___ |  |_|  ||   ||  ||   | |  _    |\n";
+        cout << "\t\t   |   _   ||       || ||_|| ||   | | | |   |  |       ||       ||   |_| ||   | | | |   |\n";
+        cout << "\t\t   |__| |__||______| |_|   |_||___| |_|  |__|  |_______||_______||_______||___| |_|  |__|\n";
+        cout << "\n\t\t---------------------------------------------------------------------------------------------\n";
+        SetConsoleTextAttribute(h, 14);
+        cout << "\t\t\t\t\t\tEnter admin password: ";
+        SetConsoleTextAttribute(h, 15);
         cin.ignore();
         getline(cin, password);
 
         if (password == adminPassword) {
             isAdmin = true;
-            cout << "\t\tLogged in as admin." << endl;
+            SetConsoleTextAttribute(h, 10);
+            system("cls");
+            cout << "\t\tLogged in as admin.\n";
+            SetConsoleTextAttribute(h, 15);
             adminMenu(canteen);
             break;
         } else {
             invalidAttempts++;
-            cout << "\t\tIncorrect password. Login failed." << endl;
+            system("cls");
+            SetConsoleTextAttribute(h, 12);
+            cout << "\t\tIncorrect password. Login failed.\n";
+            SetConsoleTextAttribute(h, 15);
             if (invalidAttempts == 3) {
-                cout << "\t\tExceeded maximum login attempts. Returning to the main menu." << endl;
+                system("cls");
+                SetConsoleTextAttribute(h, 12);
+                cout << "\t\tExceeded maximum login attempts. Returning to the main menu.";
+                SetConsoleTextAttribute(h, 15);
                 break;
             }
         }
@@ -534,67 +782,85 @@ void loginAsAdmin(Canteen& canteen, bool& isAdmin, const string& adminPassword) 
 int main() {
     Canteen canteen;
     bool isAdmin = false;
-    string adminPassword = "pass"; // Set the admin password here
+    string adminPassword = "pass"; //Admin password
     int choice;
 
     while (true) {
-
-        cout << "\t\t .--.  _____  _  _  _____  ___  ___  _  _        .---.        .-._.-.  _____  _____  _  ____ \n";
-        cout << "\t\t'  __)'  _  '| || |(_   _)| __)| __)| || |  __  '  _  '  __  |  _ _  ||  _  |(_   _)'_'|  __)\n";
-        cout << "\t\t| |__ | (_) || .` |  | |  | _) | _) | .` | (__) | [_] | (__) | | v | || (_) |  | |  | || |__ \n";
-        cout << "\t\t'.___)|_[ ]_||_||_|  |_|  |___)|___)|_||_|      '.___.'      |_|   |_||_[ ]_|  |_|  |_||____)\n";
-        cout << "\n";
-        cout << "\t\t-------------------------------- Canteen Management System ----------------------------------\n\n";
-        cout << "\t\t\t\t\t\t     ";canteen.displayAvailableSeats();
-        cout << "\n\t\t----------------------------------------- Food Menu ----------------------------------------\n";
+        header();
+        cout << "\t\t\t\t\t\t     ";
+        canteen.displayAvailableSeats();
+        SetConsoleTextAttribute(h, 14);
+        cout << "\n\t\t----------------------------------------- Food Menu -----------------------------------------\n";
+        SetConsoleTextAttribute(h, 15);
         canteen.displayMenuPerStall();
+        SetConsoleTextAttribute(h, 14);
+        cout << "\t\t---------------------------------------------------------------------------------------------\n";
+        SetConsoleTextAttribute(h, 11);
+        cout << "\t\t---------------------------------------------------------------------------------------------\n";
+        cout << "\t\t\t\t\t\t[1]. Queue In\n";
+        cout << "\t\t\t\t\t\t[2]. Occupy Seat(s)\n";
+        cout << "\t\t\t\t\t\t[3]. Display Waiting List\n";
+        cout << "\t\t\t\t\t\t[4]. Login as Admin\n";
+        cout << "\t\t\t\t\t\t[5]. Exit\n";
 
-        cout << "\t\t---------------------------------------------------------------------------------------------\n" << endl;
-        cout << "\t\t\t\t\t\t 1. Queue In" << endl;
-        cout << "\t\t\t\t\t\t 2. Occupy Seat(s)" << endl;
-        cout << "\t\t\t\t\t\t 3. Display Waiting List" << endl;
-        cout << "\t\t\t\t\t\t 4. Login as Admin" << endl;
-        cout << "\t\t\t\t\t\t 5. Exit" << endl;
-
-        cout << "\n\t\t---------------------------------------------------------------------------------------------" << endl;
+        cout << "\t\t---------------------------------------------------------------------------------------------\n";
+        SetConsoleTextAttribute(h, 14);
         cout << "\t\t\t\t\t\tEnter your choice: ";
+        SetConsoleTextAttribute(h, 15);
         cin >> choice;
 
         if (cin.fail()) {
+            SetConsoleTextAttribute(h, 12);
+            system("cls");
             cout << "\t\tInvalid input. Please enter a valid number." << endl;
+            SetConsoleTextAttribute(h, 15);
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            system("pause");
-            system("CLS");
             continue;
         }
 
         switch (choice) {
             case 1:
                 queueIn(canteen);
-                system("pause");
-                system("CLS");
                 break;
             case 2:
                 canteen.occupySeats();
                 break;
             case 3:
+                system("cls");
+                SetConsoleTextAttribute(h, 11);
+                cout << "\t\t\t     _     _  _______  ___   _______    ___      ___   _______  _______ \n";
+                cout << "\t\t\t    | | _ | ||   _   ||   | |       |  |   |    |   | |       ||       |\n";
+                cout << "\t\t\t    | || || ||  |_|  ||   | |_     _|  |   |    |   | |  _____||_     _|\n";
+                cout << "\t\t\t    |       ||       ||   |   |   |    |   |    |   | | |_____   |   |  \n";
+                cout << "\t\t\t    |       ||       ||   |   |   |    |   |___ |   | |_____  |  |   |  \n";
+                cout << "\t\t\t    |   _   ||   _   ||   |   |   |    |       ||   |  _____| |  |   |  \n";
+                cout << "\t\t\t    |__| |__||__| |__||___|   |___|    |_______||___| |_______|  |___|  \n";
+                cout << "\n\t\t---------------------------------------------------------------------------------------------\n";
+                SetConsoleTextAttribute(h, 14);
                 canteen.displayWaitingList();
+                cout << "\n\t\t";
                 system("pause");
-                system("CLS");
+                system("cls");
                 break;
             case 4:
+                system("cls");
                 loginAsAdmin(canteen, isAdmin, adminPassword);
                 break;
             case 5:
+                SetConsoleTextAttribute(h, 12);
                 cout << "\t\tExiting the program." << endl;
+                SetConsoleTextAttribute(h, 15);
+                cout << "\t\t";
+                system("pause");
+                system("cls");
                 return 0;
             default:
+                system("cls");
+                SetConsoleTextAttribute(h, 12);
                 cout << "\t\tInvalid choice. Please try again." << endl;
-                system("pause");
-                system("CLS");
+                SetConsoleTextAttribute(h, 15);
                 break;
-
         }
 
         cout << endl;
