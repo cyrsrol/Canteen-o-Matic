@@ -326,11 +326,11 @@ public:
         if (waitingList.empty()) {
             cout << "Waiting list is empty." << endl;
         } else {
-            cout << "--------------------- Waiting List ---------------------" << endl;
+            cout << "\t\t\t\t--------------------- Waiting List ---------------------" << endl;
             for (const auto& entry : waitingList) {
                 string stallName = entry.first;
                 const queue<pair<time_t, string>>& customers = entry.second;
-                cout << "Stall: " << stallName << endl;
+                cout << "\t\t\t\t\tStall: " << stallName << endl;
                 queue<pair<time_t, string>> temp = customers;
                 int count = 1;
                 while (!temp.empty()) {
@@ -339,13 +339,13 @@ public:
                     struct tm* timeInfo = localtime(&joinedTime);
                     char timeStr[80];
                     strftime(timeStr, sizeof(timeStr), "%c", timeInfo);
-                    cout << count << ". " << customerName << " (Joined at: " << timeStr << ")" << endl;
+                    cout << "\t\t\t\t\t" << count << ". " << customerName << " (Joined at: " << timeStr << ")" << endl;
                     temp.pop();
                     count++;
                 }
                 cout << endl;
             }
-            cout << "--------------------------------------------------------" << endl;
+            cout << "\t\t\t\t--------------------------------------------------------" << endl;
         }
     }
 
@@ -463,21 +463,21 @@ void setMaxSeats(Canteen& canteen) {
 void adminMenu(Canteen& canteen) {
     int choice;
     do {
-        cout << "  .--.  _____  _  _  _____  ___  ___  _  _        .---.        .-._.-.  _____  _____  _  ____ \n";
-        cout << " '  __)'  _  '| || |(_   _)| __)| __)| || |  __  '  _  '  __  |  _ _  ||  _  |(_   _)'_'|  __)\n";
-        cout << " | |__ | (_) || .` |  | |  | _) | _) | .` | (__) | [_] | (__) | | v | || (_) |  | |  | || |__ \n";
-        cout << " '.___)|_[ ]_||_||_|  |_|  |___)|___)|_||_|      '.___.'      |_|   |_||_[ ]_|  |_|  |_||____)\n";
+        cout << "\t\t .--.  _____  _  _  _____  ___  ___  _  _        .---.        .-._.-.  _____  _____  _  ____ \n";
+        cout << "\t\t'  __)'  _  '| || |(_   _)| __)| __)| || |  __  '  _  '  __  |  _ _  ||  _  |(_   _)'_'|  __)\n";
+        cout << "\t\t| |__ | (_) || .` |  | |  | _) | _) | .` | (__) | [_] | (__) | | v | || (_) |  | |  | || |__ \n";
+        cout << "\t\t'.___)|_[ ]_||_||_|  |_|  |___)|___)|_||_|      '.___.'      |_|   |_||_[ ]_|  |_|  |_||____)\n";
         cout << "\n";
-        cout << "----------- Canteen Management System -----------" << endl;
-        cout << "--------- Admin Menu ---------" << endl;
-        cout << "1. Serve Customer" << endl;
-        cout << "2. Add Food to Stall" << endl;
-        cout << "3. Remove Food from Stall" << endl;
-        cout << "4. Add Seats" << endl;
-        cout << "5. Display Visitor History" << endl;
-        cout << "6. Logout" << endl;
-        cout << "-----------------------------" << endl;
-        cout << "Enter your choice: ";
+        cout << "\t\t-------------------------------- Canteen Management System ----------------------------------\n\n";
+        cout << "\t\t\t\t\t\t--------- Admin Menu ---------" << endl;
+        cout << "\t\t\t\t\t\t1. Serve Customer" << endl;
+        cout << "\t\t\t\t\t\t2. Add Food to Stall" << endl;
+        cout << "\t\t\t\t\t\t3. Remove Food from Stall" << endl;
+        cout << "\t\t\t\t\t\t4. Add Seats" << endl;
+        cout << "\t\t\t\t\t\t5. Display Visitor History" << endl;
+        cout << "\t\t\t\t\t\t6. Logout" << endl;
+        cout << "\n\t\t---------------------------------------------------------------------------------------------" << endl;
+        cout << "\t\t\t\t\t\tEnter your choice: ";
         cin >> choice;
 
         switch (choice) {
@@ -538,6 +538,7 @@ int main() {
     int choice;
 
     while (true) {
+
         cout << "\t\t .--.  _____  _  _  _____  ___  ___  _  _        .---.        .-._.-.  _____  _____  _  ____ \n";
         cout << "\t\t'  __)'  _  '| || |(_   _)| __)| __)| || |  __  '  _  '  __  |  _ _  ||  _  |(_   _)'_'|  __)\n";
         cout << "\t\t| |__ | (_) || .` |  | |  | _) | _) | .` | (__) | [_] | (__) | | v | || (_) |  | |  | || |__ \n";
@@ -563,18 +564,24 @@ int main() {
             cout << "\t\tInvalid input. Please enter a valid number." << endl;
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            system("pause");
+            system("CLS");
             continue;
         }
 
         switch (choice) {
             case 1:
                 queueIn(canteen);
+                system("pause");
+                system("CLS");
                 break;
             case 2:
                 canteen.occupySeats();
                 break;
             case 3:
                 canteen.displayWaitingList();
+                system("pause");
+                system("CLS");
                 break;
             case 4:
                 loginAsAdmin(canteen, isAdmin, adminPassword);
@@ -584,7 +591,10 @@ int main() {
                 return 0;
             default:
                 cout << "\t\tInvalid choice. Please try again." << endl;
+                system("pause");
+                system("CLS");
                 break;
+
         }
 
         cout << endl;
