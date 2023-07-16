@@ -1,15 +1,16 @@
 //July 10, 2023. Finished on making the initial code, currently planning and polishing the main features.
-//July 12, 2023. Improved the queue by adding the 'removing customers from waitlist' and 'viewing the waitlist' features.
+//July 12, 2023. Improved the queue by adding the 'viewing the waitlist' features.
 //July 13, 2023. Added and improved the seating feature.
 //July 14, 2023. Added a Food Menu and Waiting List per Stall.
 //July 14, 2023. Added the visitor history feature.
-
-// Will improve the UI
+//July 16, 2023. Added <ctime> to record when the customer joins the waiting list, and when they get served.
+//July 16, 2023. Improved the UI.
 
 #include <iostream>
 #include <queue>
 #include <map>
 #include <algorithm>
+#include <ctime>
 using namespace std;
 
 struct MenuItem {
@@ -60,23 +61,32 @@ public:
         if (menuItems.empty()) {
             cout << "Menu is empty." << endl;
         } else {
-            cout << "Food Menu per Stall:" << endl;
+            cout << "------------------ Food Menu per Stall ------------------" << endl;
             for (const auto& stall : menuItems) {
                 cout << "Stall: " << stall.first << endl;
                 const queue<MenuItem>& items = stall.second;
                 queue<MenuItem> temp = items;
                 while (!temp.empty()) {
                     MenuItem item = temp.front();
-                    cout << item.name << " - $" << item.price << endl;
+                    cout << "- " << item.name << " ($" << item.price << ")" << endl;
                     temp.pop();
                 }
                 cout << endl;
             }
+            cout << "--------------------------------------------------------" << endl;
         }
     }
 
     bool isStallValid(string stall) {
-        return menuItems.count(stall) > 0;
+        transform(stall.begin(), stall.end(), stall.begin(), ::tolower);
+        for (const auto& entry : menuItems) {
+            string lowerStall = entry.first;
+            transform(lowerStall.begin(), lowerStall.end(), lowerStall.begin(), ::tolower);
+            if (stall == lowerStall) {
+                return true;
+            }
+        }
+        return false;
     }
 };
 
@@ -180,19 +190,16 @@ class Canteen {
 private:
     Menu menu;
     SeatList seatList;
-    map<string, queue<string>> waitingList;
-    queue<string> visitorHistory;
-    vector<string> stalls;
+    map<string, queue<pair<time_t, string>>> waitingList;
+    time_t currentTime;
 
 public:
-    Canteen() {}
+    Canteen() {
+        currentTime = time(nullptr);
+    }
 
     void setMaxSeats(int max) {
         seatList.setMaxSeats(max);
-    }
-
-    void addStall(string stallName) {
-        stalls.push_back(stallName);
     }
 
     void addFoodToStall(string name, double price, string stallName) {
@@ -210,8 +217,13 @@ public:
 
     void addCustomerToWaitingList(string customerName, string stallName) {
         if (menu.isStallValid(stallName)) {
-            waitingList[stallName].push(customerName);
-            cout << customerName << " has been added to the waiting list of " << stallName << "." << endl;
+            time_t currentTime = time(nullptr);
+            struct tm* timeInfo = localtime(&currentTime);
+            char timeStr[80];
+            strftime(timeStr, sizeof(timeStr), "%c", timeInfo);
+
+            waitingList[stallName].push(make_pair(currentTime, customerName));
+            cout << customerName << " has been added to the waiting list of " << stallName << " at " << timeStr << "." << endl;
         } else {
             cout << "Invalid stall name. Please choose from the available stalls." << endl;
         }
@@ -222,13 +234,16 @@ public:
             auto it = waitingList.begin();
             string stallName = it->first;
             if (!it->second.empty()) {
-                string customerName = it->second.front();
+                time_t servedTime = time(nullptr);
+                time_t joinedTime = it->second.front().first;
+                string customerName = it->second.front().second;
                 it->second.pop();
                 if (it->second.empty()) {
                     waitingList.erase(it);
                 }
-                visitorHistory.push(customerName);
                 cout << "Next customer at " << stallName << ": " << customerName << endl;
+                cout << "Joined at: " << ctime(&joinedTime);
+                cout << "Served at: " << ctime(&servedTime);
             }
         } else {
             cout << "Waiting list is empty." << endl;
@@ -236,18 +251,13 @@ public:
     }
 
     void displayAvailableSeats() {
-        seatList.displayAvailableSeats();
-    }
-
-    int getAvailableSeatCount() {
-        return seatList.getAvailableSeatCount();
+        cout << "Available seats: " << seatList.getAvailableSeatCount() << endl;
     }
 
     void occupySeats() {
         int numSeats;
         cout << "Enter the number of seats to occupy: ";
         cin >> numSeats;
-
         seatList.occupySeats(numSeats);
     }
 
@@ -255,35 +265,26 @@ public:
         if (waitingList.empty()) {
             cout << "Waiting list is empty." << endl;
         } else {
-            cout << "Waiting list:" << endl;
+            cout << "--------------------- Waiting List ---------------------" << endl;
             for (const auto& entry : waitingList) {
                 string stallName = entry.first;
-                const queue<string>& customers = entry.second;
+                const queue<pair<time_t, string>>& customers = entry.second;
                 cout << "Stall: " << stallName << endl;
-                queue<string> temp = customers;
+                queue<pair<time_t, string>> temp = customers;
                 int count = 1;
                 while (!temp.empty()) {
-                    cout << count << ". " << temp.front() << endl;
+                    time_t joinedTime = temp.front().first;
+                    string customerName = temp.front().second;
+                    struct tm* timeInfo = localtime(&joinedTime);
+                    char timeStr[80];
+                    strftime(timeStr, sizeof(timeStr), "%c", timeInfo);
+                    cout << count << ". " << customerName << " (Joined at: " << timeStr << ")" << endl;
                     temp.pop();
                     count++;
                 }
                 cout << endl;
             }
-        }
-    }
-
-    void displayVisitorHistory() {
-        if (visitorHistory.empty()) {
-            cout << "Visitor history is empty." << endl;
-        } else {
-            cout << "Visitor history:" << endl;
-            int count = 1;
-            queue<string> temp = visitorHistory;
-            while (!temp.empty()) {
-                cout << count << ". " << temp.front() << endl;
-                temp.pop();
-                count++;
-            }
+            cout << "--------------------------------------------------------" << endl;
         }
     }
 };
@@ -291,14 +292,15 @@ public:
 int main() {
     Canteen canteen;
     bool isAdmin = false;
-    string adminPassword = "pass"; // Set the admin password here
+    string adminPassword = "pass";
     int choice;
 
     while (true) {
-        cout << "----------- Canteen Management System -----------" << endl;
+        cout << "------------------- Canteen Management System -------------------" << endl;
         canteen.displayMenuPerStall();
+        cout << endl;
         canteen.displayAvailableSeats();
-        cout << "1. Add Customer" << endl;
+        cout << "1. Add Customer to Waiting List" << endl;
         cout << "2. Occupy Seats" << endl;
         cout << "3. Display Waiting List" << endl;
 
@@ -307,14 +309,13 @@ int main() {
             cout << "5. Add Food to Stall" << endl;
             cout << "6. Remove Food from Stall" << endl;
             cout << "7. Set Maximum Seats" << endl;
-            cout << "8. Display Visitor History" << endl;
-            cout << "9. Logout" << endl;
+            cout << "8. Logout" << endl;
         } else {
             cout << "4. Login as Admin" << endl;
             cout << "5. Exit" << endl;
         }
 
-        cout << "------------------------------------------------" << endl;
+        cout << "----------------------------------------------------------------" << endl;
         cout << "Enter your choice: ";
         cin >> choice;
 
@@ -354,10 +355,11 @@ int main() {
                 break;
             case 5:
                 if (isAdmin) {
+                    isAdmin = false;
+                    cout << "Logged out." << endl;
+                } else {
                     cout << "Exiting the program..." << endl;
                     return 0;
-                } else {
-                    cout << "Invalid choice. Please try again." << endl;
                 }
                 break;
             case 6:
@@ -381,21 +383,6 @@ int main() {
                     cin >> maxSeats;
                     canteen.setMaxSeats(maxSeats);
                     cout << "Maximum seats set to " << maxSeats << "." << endl;
-                } else {
-                    cout << "Invalid choice. Please try again." << endl;
-                }
-                break;
-            case 8:
-                if (isAdmin) {
-                    canteen.displayVisitorHistory();
-                } else {
-                    cout << "Invalid choice. Please try again." << endl;
-                }
-                break;
-            case 9:
-                if (isAdmin) {
-                    isAdmin = false;
-                    cout << "Logged out." << endl;
                 } else {
                     cout << "Invalid choice. Please try again." << endl;
                 }
