@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <ctime>
+#include <windows.h>
 using namespace std;
 
 struct MenuItem {
