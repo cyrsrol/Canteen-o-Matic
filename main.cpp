@@ -48,14 +48,14 @@ private:
     map<string, queue<MenuItem>> menuItems;
 
 public:
-    Menu() {
+    Menu() {   // "/*" Can be removed to set default stalls
         /*
         addFood("Burger", 50, "Mcdo");
         addFood("Fries", 35, "Mcdo");
         addFood("Chicken Joy", 90, "Jabe");
         addFood("CokeFloat", 40, "Jabe");
         addFood("Chicken", 90, "KFC");
-        addFood("Inihaw", 99, "Mang Inisal");
+        addFood("Inihaw", 99, "Mang Inasal");
         */
     }
 
@@ -136,7 +136,7 @@ public:
                     if (i < menuItems[stall].size()) {
                         MenuItem item = menuItems[stall].front();
                         menuItems[stall].pop();
-                        cout << "| " << setw(nameWidth) << left << item.name << "$" << setw(priceWidth) << left << fixed << setprecision(2) << item.price << " ";
+                        cout << "| " << setw(nameWidth) << left << item.name << "P" << setw(priceWidth) << left << fixed << setprecision(2) << item.price << " ";
                         menuItems[stall].push(item);
                     } else {
                         cout << "| " << setw(nameWidth) << right << " " << setw(priceWidth + 2) << right << "";
@@ -293,7 +293,7 @@ public:
         menu.addFood(name, price, stallName);
         system("cls");
         SetConsoleTextAttribute(h, 10);
-        cout << "\t\tFood item added: " << name << " - $" << price << " (Stall: " << stallName << ")";
+        cout << "\t\tFood item added: " << name << " - P" << price << " (Stall: " << stallName << ")";
         SetConsoleTextAttribute(h, 15);
     }
 
@@ -563,7 +563,7 @@ void addFoodToStall(Canteen& canteen) {
         newFoodName = newFoodName.substr(0, 12);
     }
     SetConsoleTextAttribute(h, 14);
-    cout << "\t\t\t\t\t\tEnter the food price: $";
+    cout << "\t\t\t\t\t\tEnter the food price: P";
     SetConsoleTextAttribute(h, 15);
     cin >> newFoodPrice;
 
@@ -776,7 +776,7 @@ void loginAsAdmin(Canteen& canteen, bool& isAdmin, const string& adminPassword) 
 int main() {
     Canteen canteen;
     bool isAdmin = false;
-    string adminPassword = "pass"; //Admin password
+    string adminPassword = "pass";
     int choice;
 
     while (true) {
