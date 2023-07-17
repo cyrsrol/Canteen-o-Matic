@@ -8,8 +8,6 @@
 //July 16, 2023. Improved and changed some of the features and apply some error handling.
 //July 17, 2023. Improved the UI and added <windows.h> to apply color to text.
 
-//Will check for Error.
-
 #include <iostream>
 #include <queue>
 #include <map>
