@@ -507,10 +507,6 @@ public:
 };
 
 void queueIn(Canteen& canteen) {
-    canteen.addCustomerToWaitingList("polo1", "Mcdo");
-    canteen.addCustomerToWaitingList("polo2", "Jabe");
-    canteen.addCustomerToWaitingList("mary1", "Mcdo");
-    canteen.addCustomerToWaitingList("mary2", "Jabe");
     string customerName, stallName;
     system("cls");
     SetConsoleTextAttribute(h, 11);
