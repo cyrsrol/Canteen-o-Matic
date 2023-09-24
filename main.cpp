@@ -856,9 +856,7 @@ int main() {
                 SetConsoleTextAttribute(h, 15);
                 break;
         }
-
         cout << endl;
     }
-
     return 0;
 }
